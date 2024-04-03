@@ -105,4 +105,3 @@ namespace Managment.core.Repositories.Personas.Services
     }
 
 }
-}
