@@ -10,7 +10,6 @@ namespace Managment.core.Database.Services
         public SqliteDatabaseInitializer(string connectionString)
         {
             _connectionString = connectionString;
-            this.InitializeDatabase();
         }
 
         public override void InitializeDatabase()

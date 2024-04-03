@@ -15,13 +15,22 @@ namespace Managment.core
         {
             if (String.IsNullOrWhiteSpace(dbconfigurator.ConnectionString)) throw new Exception("Please provide a db connection string");
 
-            services.AddScoped<IDatabaseInitializer>(services =>
+            string ConnString = dbconfigurator.ConnectionString;
+            services.AddTransient<IDatabaseInitializer>(services =>
             {
-                return new SqliteDatabaseInitializer(dbconfigurator.ConnectionString);
+                return new SqliteDatabaseInitializer(ConnString);
             });
 
-            services.AddScoped<IPersonasRepository, DirectorioService>();
-            services.AddScoped<IFacturasRepository, VentasService>();
+
+            services.AddScoped<IPersonasRepository>(services =>
+            {
+                return new DirectorioService(ConnString);
+            });
+
+            services.AddScoped<IFacturasRepository>(services =>
+            {
+                return new VentasService(ConnString);
+            });
         }
     }
 }

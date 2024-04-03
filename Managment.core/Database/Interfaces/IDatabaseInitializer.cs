@@ -5,7 +5,7 @@
         public abstract void InitializeDatabase();
     }
 
-    internal interface IDatabaseInitializer
+    public interface IDatabaseInitializer
     {
         void InitializeDatabase();
     }
