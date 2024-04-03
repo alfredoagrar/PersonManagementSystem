@@ -34,13 +34,29 @@ namespace Managment.core.Repositories.Personas.Services
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            var command = connection.CreateCommand();
-            command.CommandText =
-            @"
-                DELETE FROM Personas WHERE Id = @Id;
-            ";
-            command.Parameters.AddWithValue("@Id", id);
-            command.ExecuteNonQuery();
+            using (var transaction = connection.BeginTransaction())
+            {
+                var command = connection.CreateCommand();
+
+                // Primero, borrar todas las facturas asociadas a la persona
+                command.CommandText =
+                @"
+                    DELETE FROM Facturas WHERE PersonaId = @Id;
+                ";
+
+                command.Parameters.AddWithValue("@Id", id);
+                command.ExecuteNonQuery();
+
+                // Luego, borrar la persona
+                command.CommandText =
+                @"
+                    DELETE FROM Personas WHERE Id = @Id;
+                ";
+                // El parámetro @Id ya está añadido y tiene el valor deseado.
+                command.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
         }
 
         public override IEnumerable<Persona> findPersonas()
