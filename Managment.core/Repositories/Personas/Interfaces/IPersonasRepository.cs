@@ -4,17 +4,17 @@ namespace Managment.core.Repositories.Personas.Interfaces
 {
     internal abstract class PersonasBase : IPersonasRepository
     {
-        public abstract void deletePersonaByIdentificacion(int id);
-        public abstract Persona findPersonaByIdentificacion(int id);
-        public abstract IEnumerable<Persona> findPersonas();
-        public abstract void storePersona(Persona persona);
+        public abstract Task<bool> deletePersonaByIdentificacion(int id);
+        public abstract Task<Persona?> findPersonaByIdentificacion(string id);
+        public abstract Task<IEnumerable<Persona>> findPersonas();
+        public abstract Task storePersona(Persona persona);
     }
 
     public interface IPersonasRepository
     {
-        Persona findPersonaByIdentificacion(int id);
-        IEnumerable<Persona> findPersonas();
-        void deletePersonaByIdentificacion(int id);
-        void storePersona(Persona persona);
+        Task<Persona?> findPersonaByIdentificacion(string id);
+        Task<IEnumerable<Persona>> findPersonas();
+        Task<bool> deletePersonaByIdentificacion(int id);
+        Task storePersona(Persona persona);
     }
 }

@@ -1,3 +1,4 @@
+using Managment.api.Middleware;
 using Managment.core;
 using Managment.core.Database.Interfaces;
 
@@ -26,6 +27,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//middlewares personalizados
+app.UseMiddleware<ErrorHandlingMiddleware>(); // Manejo de errores
+
 
 app.UseHttpsRedirection();
 

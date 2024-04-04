@@ -13,7 +13,7 @@ namespace Managment.core.Repositories.Personas.Services
             _connectionString = connectionString;
         }
 
-        public override void storePersona(Persona persona)
+        public async override Task storePersona(Persona persona)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -27,39 +27,46 @@ namespace Managment.core.Repositories.Personas.Services
             command.Parameters.AddWithValue("@ApellidoPaterno", persona.ApellidoPaterno);
             command.Parameters.AddWithValue("@ApellidoMaterno", persona.ApellidoMaterno ?? string.Empty); // Considerando que ApellidoMaterno es opcional.
             command.Parameters.AddWithValue("@Identificacion", persona.Identificacion);
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
-        public override void deletePersonaByIdentificacion(int id)
+        public async override Task<bool> deletePersonaByIdentificacion(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using (var transaction = connection.BeginTransaction())
+            await connection.OpenAsync();
+
+            using (var transaction = await connection.BeginTransactionAsync())
             {
+                var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "SELECT COUNT(1) FROM Personas WHERE Id = @Id;";
+                checkCommand.Parameters.AddWithValue("@Id", id);
+                var result = await checkCommand.ExecuteScalarAsync();
+                bool IsValid = false;
+                if (Convert.ToInt32(result) == 0)
+                {
+                    return IsValid;
+                }
+
                 var command = connection.CreateCommand();
 
                 // Primero, borrar todas las facturas asociadas a la persona
-                command.CommandText =
-                @"
-                    DELETE FROM Facturas WHERE PersonaId = @Id;
-                ";
-
+                command.CommandText = "DELETE FROM Facturas WHERE PersonaId = @Id;";
                 command.Parameters.AddWithValue("@Id", id);
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
 
                 // Luego, borrar la persona
-                command.CommandText =
-                @"
-                    DELETE FROM Personas WHERE Id = @Id;
-                ";
+                command.CommandText = "DELETE FROM Personas WHERE Id = @Id;";
                 // El parámetro @Id ya está añadido y tiene el valor deseado.
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
 
-                transaction.Commit();
+                await transaction.CommitAsync();
+
+                IsValid = true;
+                return IsValid;
             }
         }
 
-        public override IEnumerable<Persona> findPersonas()
+        public async override Task<IEnumerable<Persona>> findPersonas()
         {
             var personas = new List<Persona>();
             using var connection = new SqliteConnection(_connectionString);
@@ -67,7 +74,7 @@ namespace Managment.core.Repositories.Personas.Services
             var command = connection.CreateCommand();
             command.CommandText = "SELECT Id, Nombre, ApellidoPaterno, ApellidoMaterno, Identificacion FROM Personas;";
 
-            using (var reader = command.ExecuteReader())
+            using (var reader = await command.ExecuteReaderAsync())
             {
                 while (reader.Read())
                 {
@@ -85,15 +92,15 @@ namespace Managment.core.Repositories.Personas.Services
             return personas;
         }
 
-        public override Persona findPersonaByIdentificacion(int id)
+        public async override Task<Persona?> findPersonaByIdentificacion(string id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, Nombre, ApellidoPaterno, ApellidoMaterno, Identificacion FROM Personas WHERE Id = @Id;";
+            command.CommandText = "SELECT Id, Nombre, ApellidoPaterno, ApellidoMaterno, Identificacion FROM Personas WHERE Identificacion = @Id;";
             command.Parameters.AddWithValue("@Id", id);
 
-            using (var reader = command.ExecuteReader())
+            using (var reader = await command.ExecuteReaderAsync())
             {
                 if (reader.Read())
                 {
@@ -108,15 +115,8 @@ namespace Managment.core.Repositories.Personas.Services
                 }
             }
 
-            // Retorna una instancia 'vacía' o 'predeterminada' de Persona si no se encuentra ninguna coincidencia.
-            return new Persona
-            {
-                Id = 0, // Considerado como "vacío" o un identificador no válido.
-                Nombre = string.Empty,
-                ApellidoPaterno = string.Empty,
-                ApellidoMaterno = string.Empty,
-                Identificacion = string.Empty
-            };
+            // Retorna null si no hay persona encontrada
+            return null;
         }
     }
 

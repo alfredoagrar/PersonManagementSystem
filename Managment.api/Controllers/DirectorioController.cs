@@ -1,5 +1,6 @@
-﻿using Managment.core.Repositories.Personas.Interfaces;
-using Managment.core.Repositories.Personas.Models; // Asegúrate de tener un using para el modelo Persona
+﻿using Managment.api.Models;
+using Managment.core.Repositories.Personas.Interfaces;
+using Managment.core.Repositories.Personas.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Managment.api.Controllers
@@ -15,38 +16,59 @@ namespace Managment.api.Controllers
             _personasRepository = personasRepository;
         }
 
-        // GET: directorio/findPersonaByIdentificacion/5
         [HttpGet("{Identification}")]
-        public ActionResult<Persona> FindPersonaByIdentificacion(int Identification)
+        public async Task<ActionResult<Persona?>> FindPersonaByIdentificacionAsync(string Identification)
         {
-            var persona = _personasRepository.findPersonaByIdentificacion(Identification);
+            Persona? persona = await _personasRepository.findPersonaByIdentificacion(Identification);
+            ApiResponse<Persona?> result = new ApiResponse<Persona?>();
             if (persona == null)
             {
-                return NotFound();
+                result.Success = true;
+                result.Message = $"No hay perdona con la identificacion {Identification}";
+                result.Data = null;
+                return Ok(result);
             }
 
-            return persona;
+            result.Success = true;
+            result.Message = null;
+            result.Data = persona;
+            return Ok(result);
         }
 
-        // GET: directorio/findPersonas
         [HttpGet]
-        public ActionResult<IEnumerable<Persona>> FindPersonas()
+        public async Task<ActionResult<IEnumerable<Persona>>> FindPersonasAsync()
         {
-            var personas = _personasRepository.findPersonas();
-            return Ok(personas);
+            IEnumerable<Persona> personas = await _personasRepository.findPersonas();
+            ApiResponse<IEnumerable<Persona>> result = new ApiResponse<IEnumerable<Persona>>();
+            result.Success = true;
+            result.Message = personas.Any() ? "Info correctly executed" : "There is not info to be retrieved.";
+            result.Data = personas;
+            return Ok(result);
         }
 
-        // DELETE: directorio/deletePersonaByIdentificacion/5
         [HttpDelete("{Identification}")]
-        public IActionResult DeletePersonaByIdentificacion(int Identification)
+        public async Task<IActionResult> DeletePersonaByIdentificacionAsync(int Id)
         {
-            _personasRepository.deletePersonaByIdentificacion(Identification);
-            return NoContent(); // 204 No Content es comúnmente utilizado para indicar que la operación fue exitosa pero no hay contenido para devolver.
+            bool IsDeleted = await _personasRepository.deletePersonaByIdentificacion(Id);
+            ApiResponse<string?> result = new ApiResponse<string?>();
+
+            if(IsDeleted)
+            {
+                result.Success = true;
+                result.Message = $"La persona con el Id {Id} fue eliminada correctamente.";
+                result.Data = null;
+                return Ok(result);
+            }
+
+            result.Success = true;
+            result.Message = $"No hay una persona con la Id {Id}.";
+            result.Data = null;
+            return Ok(result);
+
         }
 
-        // POST: directorio/storePersona
         [HttpPost]
-        public ActionResult<Persona> StorePersona([FromBody] PersonaDto newPersona)
+        public async Task<ActionResult<Persona>> StorePersonaAsync([FromBody] PersonaDto newPersona)
         {
             Persona persona = new Persona()
             {
@@ -55,9 +77,15 @@ namespace Managment.api.Controllers
                 ApellidoMaterno = newPersona.ApellidoMaterno,
                 Identificacion = newPersona.Identificacion,
             };
-            _personasRepository.storePersona(persona);
-            return Ok();
-            // Asumiendo que el modelo Persona tiene una propiedad Identificacion
+            await _personasRepository.storePersona(persona);
+
+            Persona? createdPerson = await _personasRepository.findPersonaByIdentificacion(newPersona.Identificacion);
+            ApiResponse<Persona?> result = new ApiResponse<Persona?>();
+            result.Success = true;
+            result.Message = null;
+            result.Data = createdPerson;
+
+            return Ok(result);
         }
     }
 }
