@@ -3,15 +3,26 @@ using System.Net;
 
 namespace Managment.api.Middleware
 {
+    /// <summary>
+    /// Clase que representa un middleware para manejar errores en la aplicación.
+    /// </summary>
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate _next;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase ErrorHandlingMiddleware.
+        /// </summary>
+        /// <param name="next">El siguiente middleware en la cadena de ejecución.</param>
         public ErrorHandlingMiddleware(RequestDelegate next)
         {
             _next = next;
         }
 
+        /// <summary>
+        /// Método que invoca el middleware para manejar errores.
+        /// </summary>
+        /// <param name="context">El contexto HTTP actual.</param>
         public async Task Invoke(HttpContext context)
         {
             try
@@ -24,6 +35,12 @@ namespace Managment.api.Middleware
             }
         }
 
+        /// <summary>
+        /// Método privado que maneja una excepción y devuelve una respuesta HTTP con el error.
+        /// </summary>
+        /// <param name="context">El contexto HTTP actual.</param>
+        /// <param name="exception">La excepción que se produjo.</param>
+        /// <returns>Una tarea que representa la operación asincrónica.</returns>
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             // Aquí puedes añadir cualquier lógica personalizada para diferentes tipos de excepciones
@@ -38,7 +55,6 @@ namespace Managment.api.Middleware
                 Message = exception.Message
             };
 
-            //var result = new { error = exception.Message, stackTrace = exception.StackTrace }; // Personaliza esto según tus necesidades
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
