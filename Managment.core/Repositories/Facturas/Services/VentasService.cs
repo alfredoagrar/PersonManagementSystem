@@ -1,6 +1,5 @@
 ﻿using Managment.core.Repositories.Facturas.Interfaces;
 using Managment.core.Repositories.Facturas.Models;
-using Managment.core.Repositories.Personas.Models;
 using Microsoft.Data.Sqlite;
 
 namespace Managment.core.Repositories.Facturas.Services
@@ -14,9 +13,9 @@ namespace Managment.core.Repositories.Facturas.Services
             _connectionString = connectionString;
         }
 
-        public override IEnumerable<Factura> findFacturasByPersona(int personaId)
+        public override async Task<IEnumerable<Factura>> findFacturasByPersonaAsync(int personaId)
         {
-            var facturas = new List<Factura>();
+            List<Factura> facturas = new List<Factura>();
             using (var connection = new SqliteConnection(_connectionString))
             {
                 connection.Open();
@@ -29,7 +28,7 @@ namespace Managment.core.Repositories.Facturas.Services
                 ";
                 command.Parameters.AddWithValue("@PersonaId", personaId);
 
-                using (var reader = command.ExecuteReader())
+                using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (reader.Read())
                     {
@@ -47,7 +46,7 @@ namespace Managment.core.Repositories.Facturas.Services
             return facturas; // Retorna una lista de facturas, que puede estar vacía.
         }
 
-        public override void storeFactura(Factura factura)
+        public override async Task storeFacturaAsync(Factura factura)
         {
             using (var connection = new SqliteConnection(_connectionString))
             {
@@ -62,7 +61,7 @@ namespace Managment.core.Repositories.Facturas.Services
                 command.Parameters.AddWithValue("@Monto", factura.Monto);
                 command.Parameters.AddWithValue("@FechaEmision", factura.FechaEmision);
 
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
         }
     }

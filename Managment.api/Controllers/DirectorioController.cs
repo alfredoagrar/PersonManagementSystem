@@ -20,19 +20,17 @@ namespace Managment.api.Controllers
         public async Task<ActionResult<Persona?>> FindPersonaByIdentificacionAsync(string Identification)
         {
             Persona? persona = await _personasRepository.findPersonaByIdentificacion(Identification);
-            ApiResponse<Persona?> result = new ApiResponse<Persona?>();
-            if (persona == null)
-            {
-                result.Success = true;
-                result.Message = $"No hay perdona con la identificacion {Identification}";
-                result.Data = null;
-                return Ok(result);
-            }
 
-            result.Success = true;
-            result.Message = null;
-            result.Data = persona;
+            // Usar el constructor o inicialización directa para asignar valores
+            ApiResponse<Persona?> result = new ApiResponse<Persona?>
+            {
+                Success = true,
+                Message = persona == null ? $"No hay persona con la identificación {Identification}" : null,
+                Data = persona
+            };
+
             return Ok(result);
+
         }
 
         [HttpGet]
@@ -46,24 +44,24 @@ namespace Managment.api.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{Identification}")]
+        [HttpDelete("{Id}")]
         public async Task<IActionResult> DeletePersonaByIdentificacionAsync(int Id)
         {
-            bool IsDeleted = await _personasRepository.deletePersonaByIdentificacion(Id);
-            ApiResponse<string?> result = new ApiResponse<string?>();
+            bool isDeleted = await _personasRepository.deletePersonaByIdentificacion(Id);
 
-            if(IsDeleted)
+            string message = isDeleted
+                ? $"La persona con el Id {Id} fue eliminada correctamente."
+                : $"No hay una persona con la Id {Id}.";
+
+            ApiResponse<string?> result = new ApiResponse<string?>
             {
-                result.Success = true;
-                result.Message = $"La persona con el Id {Id} fue eliminada correctamente.";
-                result.Data = null;
-                return Ok(result);
-            }
+                Success = true,
+                Message = message,
+                Data = null
+            };
 
-            result.Success = true;
-            result.Message = $"No hay una persona con la Id {Id}.";
-            result.Data = null;
             return Ok(result);
+
 
         }
 

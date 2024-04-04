@@ -118,6 +118,35 @@ namespace Managment.core.Repositories.Personas.Services
             // Retorna null si no hay persona encontrada
             return null;
         }
+
+
+
+        public async override Task<Persona?> findPersonaById(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT Id, Nombre, ApellidoPaterno, ApellidoMaterno, Identificacion FROM Personas WHERE Id = @Id;";
+            command.Parameters.AddWithValue("@Id", id);
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.Read())
+                {
+                    return new Persona
+                    {
+                        Id = reader.GetInt32(0),
+                        Nombre = reader.GetString(1),
+                        ApellidoPaterno = reader.GetString(2),
+                        ApellidoMaterno = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        Identificacion = reader.GetString(4)
+                    };
+                }
+            }
+
+            // Retorna null si no hay persona encontrada
+            return null;
+        }
     }
 
 }
